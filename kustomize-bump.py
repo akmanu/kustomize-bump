@@ -118,7 +118,7 @@ class UpdateTags:
                     scores[new_tag] += 1000
                 else:
                     logging.debug(f'Decreasing score due to non matching slug: {new_tag} {candidate_slug}')
-                    scores[new_tag] -= 500
+                    scores[new_tag] -= 100
 
         # Skip images which are older than current
         for new_tag, timestamp in new_tags.items():
