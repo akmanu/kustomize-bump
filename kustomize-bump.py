@@ -107,9 +107,11 @@ class UpdateTags:
         if old_tag is None or isinstance(old_tag, bool):
             old_tag = 'latest'
 
+        old_tag_time = new_tags.get(old_tag, 0)
+
         # Increase / decrease score due to matching slugs
         old_slugs = self.slugify(old_tag)
-        for new_tag, timestamp in new_tags.items():
+        for new_tag in new_tags.keys():
             for candidate_slug in self.slugify(new_tag):
                 if candidate_slug in old_slugs:
                     logging.debug(f'Increasing score due to matching slug: {new_tag} {candidate_slug}')
@@ -118,10 +120,11 @@ class UpdateTags:
                     logging.debug(f'Decreasing score due to non matching slug: {new_tag} {candidate_slug}')
                     scores[new_tag] -= 500
 
-        # Disqualify old images
-        for idx, new_tag in enumerate(new_tags):
-            logging.debug(f'Decreasing score due to oldness: {new_tag}')
-            scores[new_tag] -= idx*10
+        # Skip images which are older than current
+        for new_tag, timestamp in new_tags.items():
+            if old_tag_time > timestamp:
+                logging.debug(f'Removing tag due to being older: {new_tag}')
+                del scores[new_tag]
 
         return max(scores)
 
