@@ -42,6 +42,9 @@ class UpdateTags:
             if image != target_image:
                 continue
 
+            if 'newTag' not in image:
+                image['newTag'] = 'latest'
+
             name = crayons.yellow(image.get('newName', image.get('name')), bold=True)
             if image['newTag'] != new_tag:
                 old_tag = crayons.red(image.get('newTag', 'latest'), bold=True)
