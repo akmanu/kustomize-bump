@@ -36,7 +36,7 @@ class UpdateTags:
         with open(self.filepath, 'w') as f:
             yaml.dump(self.yaml, f, default_flow_style=False)
 
-    def modify_tag(self, target_image, new_tag):
+    def maybe_modify_tag(self, target_image, new_tag):
 
         for image in self.yaml['images']:
             if image != target_image:
@@ -46,17 +46,16 @@ class UpdateTags:
                 image['newTag'] = 'latest'
 
             name = crayons.yellow(image.get('newName', image.get('name')), bold=True)
-            if image['newTag'] != new_tag:
+
+            if image['newTag'] != new_tag and new_tag is not None:
                 old_tag = crayons.red(image.get('newTag', 'latest'), bold=True)
-
                 image['newTag'] = new_tag
-
                 new_tag = crayons.green(new_tag, bold=True)
-
                 logging.info(f'Bumped {name} from {old_tag} to {new_tag}\n')
-            else:
-                not_found = crayons.red('No new image found', bold=True)
-                logging.info(f'{not_found} for {name}\n')
+                continue
+
+            not_found = crayons.red('No new image found', bold=True)
+            logging.info(f'{not_found} for {name}\n')
 
     @property
     def images(self):
@@ -129,7 +128,7 @@ class UpdateTags:
                 logging.debug(f'Removing tag due to being older: {new_tag}')
                 del scores[new_tag]
 
-        return max(scores)
+        return max(scores) if scores else None
 
     def run(self):
         self._read()
@@ -140,8 +139,7 @@ class UpdateTags:
 
             candidate_tags = self.dockerhub_tags(image)
             target_tag = self.find_target_tag(tag, candidate_tags)
-
-            self.modify_tag(image, target_tag)
+            self.maybe_modify_tag(image, target_tag)
 
         self._write()
 
